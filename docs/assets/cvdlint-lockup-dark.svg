@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1701" height="724" viewBox="0 0 1701 724" role="img" aria-labelledby="title desc">
+  <title id="title">cvdlint</title>
+  <desc id="desc">cvdlint — color vision deficiency linting</desc>
+
+  <!-- Editable color-pair mark -->
+  <ellipse id="orange-blob" cx="197" cy="388.5" rx="197" ry="187.5" fill="#E66100" fill-opacity="0.863"/>
+  <ellipse id="purple-blob" cx="483" cy="388.5" rx="197" ry="187.5" fill="#5D3A9B" fill-opacity="0.863"/>
+
+  <!-- Editable wordmark -->
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text
+      id="wordmark"
+      x="720"
+      y="444"
+      fill="#F0F3F6"
+      font-family="Arial Black, Arial, Helvetica, sans-serif"
+      font-size="270"
+      letter-spacing="-2"
+      >cvdlint
+    </text>
+    <text id="tagline" letter-spacing="1" x="730" y="530" fill="#B7BEC8" font-size="67" font-weight="700">color vision deficiency linting</text>
+  </g>
+</svg>

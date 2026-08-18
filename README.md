@@ -1,29 +1,63 @@
-# cvdlint
+<p align="center">
+  <picture>
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset="docs/assets/cvdlint-lockup-dark.svg"
+    >
+    <source
+      media="(prefers-color-scheme: light)"
+      srcset="docs/assets/cvdlint-lockup-light.svg"
+    >
+    <img
+      src="docs/assets/cvdlint-lockup-light.svg"
+      width="620"
+      alt="cvdlint — colour vision deficiency linting"
+    >
+  </picture>
+</p>
 
-`cvdlint` checks Python visualizations for colour-vision deficiencies (CVD).
-It can be used as a static source-code linter,
-as a direct CLI/CI palette check, or through its Python API and plotting-library
-adapters.
+<p align="center">
+  <a href="https://pypi.org/project/cvdlint/">
+    <img src="https://img.shields.io/pypi/v/cvdlint" alt="PyPI release">
+  </a>
+  <a href="https://pypi.org/project/cvdlint/">
+    <img src="https://img.shields.io/pypi/pyversions/cvdlint" alt="Python versions">
+  </a>
+  <img src="https://img.shields.io/pypi/l/cvdlint" alt="Licence">
+</p>
 
-> [!IMPORTANT]
-> A numerical palette check cannot prove that an entire visualisation is
-> accessible. Geometry, labels, line styles, marker shapes, backgrounds, and
-> viewing conditions also matter. This package identifies potentially
-> confusable colours and is intended to support—not replace—visual review.
+<p align="center">
+  <a href="#installation">Installation</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="https://cvdlint.readthedocs.io/en/latest/">Documentation</a>
+</p>
+
+
+**cvdlint** is a static linter and Python checker for colour palettes.
+It finds literal palettes in Python files and notebook code cells,
+then reports colour pairs that may become confusable under common colour-vision deficiencies.
+Use it as a static source-code linter, a direct
+CLI/CI palette check, or through its Python API and plotting-library adapters.
+
+It is useful for research or projects that centralise colours, as it catches
+unsafe palette definitions during code review, before they spread across plots.
+
 
 ## Installation
 
+Install from PyPI:
+
 ```console
-uv add cvdlint
+pip install cvdlint
 ```
 
 Install plotting adapters as needed:
 
 ```console
-uv add "cvdlint[matplotlib,plotly]"
+pip install "cvdlint[matplotlib,plotly]"
 ```
 
-## Ways to use cvdlint
+## Usage
 
 ### Static source-code linter
 
@@ -41,18 +75,21 @@ cvdlint src/ notebooks/ examples/chart.py
 
 Static linting:
 
-- recursively discovers `.py` and `.ipynb` files;
-- finds literal lists, tuples, and sets containing at least two `#RRGGBB`
-  colours;
+- recursively discovers `.py`, `.ipynb`, `.json`, `.toml`, `.yaml`, and `.yml`
+  files;
+- resolves palettes in lists, tuples, sets, and dictionary values;
+- resolves simple variables, palette concatenation, and starred expansion;
+- recognises hexadecimal colours, CSS4 named colours, and RGB tuples using
+  either `0–1` or `0–255` channels;
 - parses notebook code cells while ignoring markdown and saved outputs;
+- carries simple constant definitions forward across notebook code cells;
 - reports the file, notebook cell, line, and column of each palette;
 - emits the stable rule code `CVD001` for potentially confusable pairs; and
 - never imports or executes the inspected project.
 
-Because it is static, this mode cannot generally resolve palettes loaded from
-configuration, returned by functions, assembled dynamically, or inherited from
-notebook execution state. Check those palettes directly with the CLI or Python
-API.
+Because it is static, this mode cannot generally resolve palettes returned by
+functions, loaded through arbitrary application code, or assembled through
+runtime control flow. Check those palettes directly with the CLI or Python API.
 
 Each result includes the complete extracted palette and either `PASS` or its
 `CVD001` findings. Interactive terminals also show colour swatches; redirected
@@ -105,10 +142,50 @@ usage: cvdlint [-h] [--tolerance FLOAT] [--metric METRIC]
   their distance scales are not interchangeable with CIEDE2000.
 - `--severity FLOAT` sets the CVD simulation severity from `0.0` (none) to
   `1.0` (full; the default).
+- `--exclude GLOB` excludes matching paths and can be repeated.
+- `--format` selects human-readable `text`, `json`, or SARIF 2.1 output.
 - `-h` or `--help` displays the command help.
 
 Exit status `0` means pass, `1` means potentially confusable pairs were found,
 and `2` means invalid input.
+
+#### Configuration
+
+Project defaults can be stored in `pyproject.toml`:
+
+```toml
+[tool.cvdlint]
+tolerance = 10
+severity = 1.0
+metric = "CIEDE2000"
+exclude = ["generated/**", "vendor/**"]
+format = "text"
+```
+
+Set `relative = true` instead of `tolerance` to use the relative policy.
+Command-line options override configuration values. Suppress an intentional
+Python palette on its line with either `# cvdlint: ignore` or
+`# noqa: CVD001`.
+
+#### Pre-commit
+
+This repository exposes a pre-commit hook. After replacing the URL and revision
+with the canonical repository details, add:
+
+```yaml
+repos:
+  - repo: https://github.com/YOUR-NAME/cvdlint
+    rev: v0.1.0
+    hooks:
+      - id: cvdlint
+```
+
+Machine-readable reports are available for CI integrations:
+
+```console
+cvdlint --format json . > cvdlint.json
+cvdlint --format sarif . > cvdlint.sarif
+```
 
 ### Python API
 
@@ -132,7 +209,7 @@ Like the CLI, `palette_check()` defaults to an absolute CIEDE2000 tolerance of
 `10`. Use `relative=True` to make the closest normal-vision pair the threshold:
 
 ```python
-report = palette_check(colors, relative=True)
+report = palette_check(colours, relative=True)
 ```
 
 ### Plot adapters
@@ -172,6 +249,7 @@ uv sync --all-extras --dev
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+uv run --extra docs sphinx-build -W -b html docs docs/_build/html
 ```
 
 ## Acknowledgements
