@@ -1,5 +1,5 @@
 cvdlint's documentation
-=======
+=======================
 
 ``cvdlint`` finds colour pairs that may become confusable under common
 colour-vision deficiencies. It can lint palettes in source files without
