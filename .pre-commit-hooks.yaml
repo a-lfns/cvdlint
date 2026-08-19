@@ -1,0 +1,6 @@
+- id: cvdlint
+  name: cvdlint
+  description: Check statically declared palettes for CVD accessibility
+  entry: cvdlint
+  language: python
+  files: \.(py|ipynb|json|toml|ya?ml)$
