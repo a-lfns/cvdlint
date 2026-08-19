@@ -27,10 +27,14 @@
 
 
 > **Catch confusable colour palettes before they ship.**\
-`cvdlint` is a colour-vision-deficiency linter for Python projects, notebooks, and palette configuration files, available as a pre-commit hook, CLI tool, and Python API.
+`cvdlint` is a colour vision deficiency linter for Python projects, notebooks, and palette configuration files, available as a pre-commit hook, CLI tool, and Python API.
 
 <p align="center">
-  <a href="#pre-commit-hook"><img alt="Pre-commit" width="33.333%" src="https://raw.githubusercontent.com/a-lfns/cvdlint/main/docs/assets/button-pre-commit.svg"></a><a href="#local-use"><img alt="Local use" width="33.333%" src="https://raw.githubusercontent.com/a-lfns/cvdlint/main/docs/assets/button-local-use.svg"></a><a href="https://cvdlint.readthedocs.io/en/latest/"><img alt="Documentation" width="33.333%" src="https://raw.githubusercontent.com/a-lfns/cvdlint/main/docs/assets/button-documentation.svg"></a>
+  <img
+    src="https://raw.githubusercontent.com/a-lfns/cvdlint/main/docs/assets/cvdlint-demo.gif"
+    alt="cvdlint static linter, direct CLI check, and Python API demonstration"
+    width="100%"
+  >
 </p>
 
 ## Usage
@@ -54,16 +58,16 @@ Install `cvdlint`:
 pip install cvdlint
 ```
 
-Scan the current project or selected paths:
-
-```console
-cvdlint [dir1] [dir2] [filepath1] [filepath2] ...
-```
-
 Check a known palette:
 
 ```console
 cvdlint '#E41A1C' '#4DAF4A' '#377EB8'
+```
+
+Scan the current project or selected paths:
+
+```console
+cvdlint [dir1] [dir2] [filepath1] [filepath2] ...
 ```
 
 Use `cvdlint` in your Python code:
@@ -87,7 +91,7 @@ reference.
 
 ## Contributing
 
-Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) to get
+Contributions are welcome; see [CONTRIBUTING.md](https://github.com/a-lfns/cvdlint/blob/main/CONTRIBUTING.md) to get
 started.
 
 ## Acknowledgements
@@ -100,4 +104,4 @@ Python implementation with its own static-linting and reporting features.
 
 ## Licence
 
-[Apache License 2.0](LICENSE) © 2026 Alice Alfonsi
+[Apache License 2.0](https://github.com/a-lfns/cvdlint/blob/main/LICENSE) © 2026 Alice Alfonsi

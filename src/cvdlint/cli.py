@@ -108,8 +108,6 @@ def _format_color(color: str) -> str:
 
 def _print_simulation_context(severity: float) -> None:
     print(f"Simulation: Machado, Oliveira & Fernandes (2009); severity {severity:.2f}.")
-    print("Simulated colours are model-specific approximations.")
-
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(

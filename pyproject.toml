@@ -1,6 +1,6 @@
 [project]
 name = "cvdlint"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Lint Python visualisation palettes for colour-vision-deficiency accessibility"
 readme = "README.md"
 authors = [
