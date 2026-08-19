@@ -29,8 +29,9 @@ Options
 Project configuration
 ---------------------
 
-Store shared defaults in ``pyproject.toml``. Command-line options take
-precedence.
+Store shared defaults in the ``pyproject.toml`` in the directory from which
+``cvdlint`` is run. The linter does not currently search parent directories for
+configuration.
 
 .. code-block:: toml
 
@@ -41,7 +42,53 @@ precedence.
    exclude = ["generated/**", "vendor/**"]
    format = "text"
 
-Use ``relative = true`` instead of ``tolerance`` for relative mode.
+The supported settings are:
+
+``tolerance``
+   A finite, non-negative number. It defaults to ``10`` for CIEDE2000 when
+   neither this setting nor relative mode is selected.
+
+``relative``
+   ``true`` or ``false``. Set it to ``true`` instead of defining ``tolerance``
+   to use the closest normal-vision pair as the threshold. The two settings are
+   mutually exclusive.
+
+``severity``
+   A number from ``0`` to ``1`` inclusive.
+
+``metric``
+   One of ``"CIEDE2000"``, ``"CIE94"``, or ``"CIE76"``. CIE94 and CIE76
+   require an explicit tolerance or relative mode.
+
+``exclude``
+   A list of glob patterns. Each pattern is matched against both the path
+   relative to a supplied directory and the complete supplied path. For
+   example, ``"generated/**"`` excludes everything below a directory named
+   ``generated`` when scanning the project root. Values passed with
+   ``--exclude`` are added to the configured patterns.
+
+``format``
+   One of ``"text"``, ``"json"``, or ``"sarif"``.
+
+Explicit command-line values take precedence over corresponding scalar
+defaults. Exclusion patterns from the command line and configuration are
+combined.
+
+Configuration errors
+--------------------
+
+Configuration is validated before any targets are checked. Unknown settings,
+incorrect TOML types, unsupported values, malformed TOML, and incompatible
+``tolerance`` and ``relative`` settings are rejected. For example, a misspelt
+setting does not silently fall back to the default:
+
+.. code-block:: text
+
+   error: unknown tool.cvdlint setting(s): tolernace
+
+Invalid configuration is written to standard error and the command exits with
+status ``2``. A valid configuration that finds potentially confusable pairs
+still exits with status ``1``.
 
 CI reports
 ----------
