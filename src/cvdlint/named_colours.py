@@ -1,4 +1,7 @@
-"""CSS4 named-colour values used by the static evaluator."""
+"""CSS4 named-colour values used by the static evaluator.
+
+Source: https://www.w3.org/TR/css-color-4/#named-colors
+"""
 
 CSS4_COLOURS: dict[str, str] = {  # cvdlint: ignore
     "aliceblue": "#F0F8FF",
