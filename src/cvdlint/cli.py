@@ -3,12 +3,68 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+import tomllib
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from .core import palette_check, simulate_palette
 from .scanner import discover_source_files, scan_paths
+
+
+@dataclass(frozen=True, slots=True)
+class _Config:
+    tolerance: float | None = None
+    relative: bool = False
+    severity: float = 1.0
+    metric: str = "CIEDE2000"
+    exclude: tuple[str, ...] = ()
+    output_format: str = "text"
+
+
+def _load_config(path: Path = Path("pyproject.toml")) -> _Config:
+    if not path.is_file():
+        return _Config()
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as error:
+        raise ValueError(f"cannot read cvdlint configuration: {error}") from error
+    values = data.get("tool", {}).get("cvdlint", {})
+    if not isinstance(values, dict):
+        raise ValueError("[tool.cvdlint] must be a table")
+    exclude = values.get("exclude", [])
+    if not isinstance(exclude, list) or not all(
+        isinstance(pattern, str) for pattern in exclude
+    ):
+        raise ValueError("tool.cvdlint.exclude must be a list of strings")
+    tolerance = values.get("tolerance")
+    relative = values.get("relative", False)
+    severity = values.get("severity", 1.0)
+    metric = values.get("metric", "CIEDE2000")
+    output_format = values.get("format", "text")
+    if tolerance is not None and not isinstance(tolerance, (int, float)):
+        raise ValueError("tool.cvdlint.tolerance must be a number")
+    if not isinstance(relative, bool):
+        raise ValueError("tool.cvdlint.relative must be true or false")
+    if relative and tolerance is not None:
+        raise ValueError("tool.cvdlint.tolerance and relative are mutually exclusive")
+    if not isinstance(severity, (int, float)) or not 0 <= severity <= 1:
+        raise ValueError("tool.cvdlint.severity must be between 0 and 1")
+    if metric not in {"CIE76", "CIE94", "CIEDE2000"}:
+        raise ValueError("tool.cvdlint.metric must be CIE76, CIE94, or CIEDE2000")
+    if output_format not in {"text", "json", "sarif"}:
+        raise ValueError("tool.cvdlint.format must be text, json, or sarif")
+    return _Config(
+        tolerance=float(tolerance) if tolerance is not None else None,
+        relative=relative,
+        severity=float(severity),
+        metric=metric,
+        exclude=tuple(exclude),
+        output_format=output_format,
+    )
 
 
 def _format_color(color: str) -> str:
@@ -54,67 +110,183 @@ def _parser() -> argparse.ArgumentParser:
     tolerance_group.add_argument(
         "--relative",
         action="store_true",
+        default=None,
         help="use the closest normal-vision pair as the tolerance",
     )
     parser.add_argument(
         "--metric",
         choices=("CIE76", "CIE94", "CIEDE2000"),
-        default="CIEDE2000",
+        default=None,
         metavar="METRIC",
         help="colour-distance metric: CIE76, CIE94, or CIEDE2000 (default: CIEDE2000)",
     )
     parser.add_argument(
         "--severity",
         type=float,
-        default=1.0,
+        default=None,
         metavar="FLOAT",
         help="CVD simulation severity from 0.0 to 1.0 (default: 1.0)",
     )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="GLOB",
+        help="exclude paths matching a glob (repeatable)",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("text", "json", "sarif"),
+        dest="output_format",
+        default=None,
+        help="report format (default: text)",
+    )
     return parser
+
+
+def _diagnostics_data(diagnostics: tuple[Any, ...]) -> list[dict[str, Any]]:
+    output: list[dict[str, Any]] = []
+    for diagnostic in diagnostics:
+        occurrence = diagnostic.occurrence
+        output.append(
+            {
+                "path": str(occurrence.path),
+                "cell": occurrence.cell,
+                "line": occurrence.line,
+                "column": occurrence.column,
+                "colors": list(occurrence.colors),
+                "passed": diagnostic.report.passed,
+                "problems": [
+                    {
+                        "rule": "CVD001",
+                        "condition": problem.condition,
+                        "first_color": problem.first_color,
+                        "second_color": problem.second_color,
+                        "distance": problem.distance,
+                        "tolerance": problem.tolerance,
+                    }
+                    for problem in diagnostic.report.problems
+                ],
+            }
+        )
+    return output
+
+
+def _print_machine_report(output_format: str, diagnostics: tuple[Any, ...]) -> None:
+    data = _diagnostics_data(diagnostics)
+    if output_format == "json":
+        print(json.dumps({"palettes": data}, indent=2))
+        return
+    results = []
+    for palette in data:
+        for problem in palette["problems"]:
+            location: dict[str, Any] = {
+                "physicalLocation": {
+                    "artifactLocation": {"uri": palette["path"]},
+                    "region": {
+                        "startLine": palette["line"],
+                        "startColumn": palette["column"],
+                    },
+                }
+            }
+            results.append(
+                {
+                    "ruleId": "CVD001",
+                    "level": "warning",
+                    "message": {
+                        "text": (
+                            f"{problem['condition']}: {problem['first_color']} / "
+                            f"{problem['second_color']} = {problem['distance']:.2f} "
+                            f"< {problem['tolerance']:.2f}"
+                        )
+                    },
+                    "locations": [location],
+                    "properties": {"cell": palette["cell"]},
+                }
+            )
+    sarif = {
+        "version": "2.1.0",
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "cvdlint",
+                        "rules": [
+                            {
+                                "id": "CVD001",
+                                "shortDescription": {
+                                    "text": "Potentially confusable colour pair"
+                                },
+                            }
+                        ],
+                    }
+                },
+                "results": results,
+            }
+        ],
+    }
+    print(json.dumps(sarif, indent=2))
 
 
 def main() -> None:
     """Run the palette linter and return a CI-friendly exit status."""
     args = _parser().parse_args()
+    try:
+        config = _load_config()
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        raise SystemExit(2) from error
+    relative = config.relative if args.relative is None else args.relative
+    metric = args.metric or config.metric
+    severity = config.severity if args.severity is None else args.severity
+    output_format = args.output_format or config.output_format
+    configured_tolerance = (
+        config.tolerance if args.tolerance is None else args.tolerance
+    )
+    excludes = config.exclude + tuple(args.exclude)
     direct_colors = all(target.startswith("#") for target in args.targets)
     try:
-        if args.relative:
+        if relative:
             tolerance = None
-        elif args.tolerance is not None:
-            tolerance = args.tolerance
-        elif args.metric == "CIEDE2000":
+        elif configured_tolerance is not None:
+            tolerance = configured_tolerance
+        elif metric == "CIEDE2000":
             tolerance = 10.0
         else:
-            raise ValueError(
-                f"--metric {args.metric} requires --tolerance or --relative"
-            )
+            raise ValueError(f"--metric {metric} requires --tolerance or --relative")
         if direct_colors:
             report = palette_check(
                 args.targets,
                 tolerance=tolerance,
-                relative=args.relative,
-                severity=args.severity,
-                metric=args.metric,
+                relative=relative,
+                severity=severity,
+                metric=metric,
             )
         else:
             if any(target.startswith("#") for target in args.targets):
                 raise ValueError("cannot mix source paths and direct colours")
             source_files = discover_source_files(
-                Path(target) for target in args.targets
+                (Path(target) for target in args.targets), exclude=excludes
             )
             diagnostics = scan_paths(
                 source_files,
                 tolerance=tolerance,
-                relative=args.relative,
-                severity=args.severity,
-                metric=args.metric,
+                relative=relative,
+                severity=severity,
+                metric=metric,
             )
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)
         raise SystemExit(2) from error
 
     if not direct_colors:
-        _print_simulation_context(args.severity)
+        if output_format != "text":
+            _print_machine_report(output_format, diagnostics)
+            if any(not diagnostic.report.passed for diagnostic in diagnostics):
+                raise SystemExit(1)
+            return
+        _print_simulation_context(severity)
         problem_count = 0
         for diagnostic in diagnostics:
             occurrence = diagnostic.occurrence
@@ -135,7 +307,7 @@ def main() -> None:
                 simulated = simulate_palette(
                     (problem.first_color, problem.second_color),
                     problem.condition,  # type: ignore[arg-type]
-                    severity=args.severity,
+                    severity=severity,
                 )
                 print(
                     f"  CVD001 {problem.condition}: distance "
@@ -162,7 +334,8 @@ def main() -> None:
             raise SystemExit(1)
         return
 
-    _print_simulation_context(args.severity)
+    _print_simulation_context(severity)
+    print("palette: " + "  ".join(_format_color(color) for color in report.colors))
     for summary in report.summaries:
         print(
             f"{summary.name:14} {summary.distinguishable_pair_count:>3}/"
@@ -174,9 +347,26 @@ def main() -> None:
         return
     print("FAIL: potentially indistinguishable colour pairs", file=sys.stderr)
     for problem in report.problems:
+        simulated = simulate_palette(
+            (problem.first_color, problem.second_color),
+            problem.condition,  # type: ignore[arg-type]
+            severity=severity,
+        )
         print(
-            f"  {problem.condition}: {problem.first_color} / "
-            f"{problem.second_color} = {problem.distance:.2f}",
+            f"  CVD001 {problem.condition}: distance "
+            f"{problem.distance:.2f} < {problem.tolerance:.2f}",
+            file=sys.stderr,
+        )
+        print(
+            "    original:  "
+            + "  ".join(
+                _format_color(color)
+                for color in (problem.first_color, problem.second_color)
+            ),
+            file=sys.stderr,
+        )
+        print(
+            "    simulated: " + "  ".join(_format_color(color) for color in simulated),
             file=sys.stderr,
         )
     raise SystemExit(1)

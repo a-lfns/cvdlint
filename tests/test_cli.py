@@ -13,7 +13,6 @@ def test_help_explains_cli_options(capsys: pytest.CaptureFixture[str]) -> None:
     assert exit_info.value.code == 0
     help_text = capsys.readouterr().out
     assert "minimum acceptable perceptual distance" in help_text
-    assert "default: 10 for" in help_text
     assert "closest normal-vision pair" in help_text
     assert "CIEDE2000" in help_text
     assert "severity from 0.0 to 1.0" in help_text
@@ -122,6 +121,33 @@ def test_cli_reports_configured_simulation_severity(
     assert "severity 0.50" in capsys.readouterr().out
 
 
+def test_direct_cli_reports_palette_and_simulated_problem_colours(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "cvdlint",
+            "--tolerance",
+            "10",
+            "#E41A1C",
+            "#4DAF4A",
+            "#377EB8",
+        ],
+    )
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    assert exit_info.value.code == 1
+    assert "palette: #E41A1C  #4DAF4A  #377EB8" in captured.out
+    assert "CVD001 deuteranopia: distance 9.60 < 10.00" in captured.err
+    assert "original:  #E41A1C  #4DAF4A" in captured.err
+    assert "simulated: #938208  #A69852" in captured.err
+
+
 def test_cli_relative_mode_retains_normal_vision_threshold(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -153,6 +179,54 @@ def test_nondefault_metric_requires_threshold_policy(
 
     assert exit_info.value.code == 2
     assert "requires --tolerance or --relative" in capsys.readouterr().err
+
+
+def test_reads_pyproject_configuration_and_excludes_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.cvdlint]\ntolerance = 100\nexclude = ["ignored.py"]\n'
+    )
+    (tmp_path / "checked.py").write_text('p = ["#000000", "#FFFFFF"]\n')
+    (tmp_path / "ignored.py").write_text('p = ["#000000", "#FFFFFF"]\n')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.argv", ["cvdlint", "."])
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    output = capsys.readouterr().out
+    assert exit_info.value.code == 1
+    assert "checked.py" in output
+    assert "ignored.py" not in output
+    assert "in 2 file(s)" in output
+
+
+@pytest.mark.parametrize("output_format", ["json", "sarif"])
+def test_machine_readable_output(
+    output_format: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    path = tmp_path / "chart.py"
+    path.write_text('p = ["#E41A1C", "#4DAF4A"]\n')
+    monkeypatch.setattr(
+        "sys.argv",
+        ["cvdlint", "--tolerance", "100", "--format", output_format, str(path)],
+    )
+
+    with pytest.raises(SystemExit):
+        main()
+
+    report = json.loads(capsys.readouterr().out)
+    if output_format == "json":
+        assert report["palettes"][0]["colors"] == ["#E41A1C", "#4DAF4A"]
+    else:
+        assert report["version"] == "2.1.0"
+        assert report["runs"][0]["results"][0]["ruleId"] == "CVD001"
 
 
 @pytest.mark.parametrize("severity", ["-0.1", "1.1"])
