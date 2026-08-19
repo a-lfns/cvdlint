@@ -262,7 +262,12 @@ def main() -> None:
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)
         raise SystemExit(2) from error
-    relative = config.relative if args.relative is None else args.relative
+    if args.relative:
+        relative = True
+    elif args.tolerance is not None:
+        relative = False
+    else:
+        relative = config.relative
     metric = args.metric or config.metric
     severity = config.severity if args.severity is None else args.severity
     output_format = args.output_format or config.output_format

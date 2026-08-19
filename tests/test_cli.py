@@ -204,6 +204,23 @@ def test_reads_pyproject_configuration_and_excludes_paths(
     assert "in 2 file(s)" in output
 
 
+def test_cli_tolerance_overrides_configured_relative_mode(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "pyproject.toml").write_text("[tool.cvdlint]\nrelative = true\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "sys.argv",
+        ["cvdlint", "--tolerance", "10", "#4DAF4A", "#377EB8"],
+    )
+
+    main()
+
+    assert "PASS" in capsys.readouterr().out
+
+
 @pytest.mark.parametrize(
     ("configuration", "message"),
     [

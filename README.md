@@ -174,7 +174,7 @@ with the canonical repository details, add:
 
 ```yaml
 repos:
-  - repo: https://github.com/YOUR-NAME/cvdlint
+  - repo: https://github.com/a-lfns/cvdlint
     rev: v0.1.0
     hooks:
       - id: cvdlint
