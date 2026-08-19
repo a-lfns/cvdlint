@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python 3.10
+    import tomli as tomllib
+
 from .core import palette_check, simulate_palette
 from .scanner import discover_source_files, scan_paths
+
+_CONFIG_KEYS = {"tolerance", "relative", "severity", "metric", "exclude", "format"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +42,10 @@ def _load_config(path: Path = Path("pyproject.toml")) -> _Config:
     values = data.get("tool", {}).get("cvdlint", {})
     if not isinstance(values, dict):
         raise ValueError("[tool.cvdlint] must be a table")
+    unknown = set(values) - _CONFIG_KEYS
+    if unknown:
+        names = ", ".join(sorted(unknown))
+        raise ValueError(f"unknown tool.cvdlint setting(s): {names}")
     exclude = values.get("exclude", [])
     if not isinstance(exclude, list) or not all(
         isinstance(pattern, str) for pattern in exclude
@@ -45,17 +56,31 @@ def _load_config(path: Path = Path("pyproject.toml")) -> _Config:
     severity = values.get("severity", 1.0)
     metric = values.get("metric", "CIEDE2000")
     output_format = values.get("format", "text")
-    if tolerance is not None and not isinstance(tolerance, (int, float)):
-        raise ValueError("tool.cvdlint.tolerance must be a number")
+    if tolerance is not None:
+        if isinstance(tolerance, bool) or not isinstance(tolerance, (int, float)):
+            raise ValueError("tool.cvdlint.tolerance must be a number")
+        if not math.isfinite(tolerance) or tolerance < 0:
+            raise ValueError(
+                "tool.cvdlint.tolerance must be a finite non-negative number"
+            )
     if not isinstance(relative, bool):
         raise ValueError("tool.cvdlint.relative must be true or false")
     if relative and tolerance is not None:
         raise ValueError("tool.cvdlint.tolerance and relative are mutually exclusive")
-    if not isinstance(severity, (int, float)) or not 0 <= severity <= 1:
+    if (
+        isinstance(severity, bool)
+        or not isinstance(severity, (int, float))
+        or not math.isfinite(severity)
+        or not 0 <= severity <= 1
+    ):
         raise ValueError("tool.cvdlint.severity must be between 0 and 1")
-    if metric not in {"CIE76", "CIE94", "CIEDE2000"}:
+    if not isinstance(metric, str) or metric not in {"CIE76", "CIE94", "CIEDE2000"}:
         raise ValueError("tool.cvdlint.metric must be CIE76, CIE94, or CIEDE2000")
-    if output_format not in {"text", "json", "sarif"}:
+    if not isinstance(output_format, str) or output_format not in {
+        "text",
+        "json",
+        "sarif",
+    }:
         raise ValueError("tool.cvdlint.format must be text, json, or sarif")
     return _Config(
         tolerance=float(tolerance) if tolerance is not None else None,

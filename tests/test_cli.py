@@ -204,6 +204,34 @@ def test_reads_pyproject_configuration_and_excludes_paths(
     assert "in 2 file(s)" in output
 
 
+@pytest.mark.parametrize(
+    ("configuration", "message"),
+    [
+        ("tolernace = 10", "unknown tool.cvdlint setting(s): tolernace"),
+        ("tolerance = true", "tolerance must be a number"),
+        ("severity = true", "severity must be between 0 and 1"),
+        ('metric = ["CIE76"]', "metric must be CIE76, CIE94, or CIEDE2000"),
+        ("format = false", "format must be text, json, or sarif"),
+    ],
+)
+def test_rejects_invalid_pyproject_configuration(
+    configuration: str,
+    message: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(f"[tool.cvdlint]\n{configuration}\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.argv", ["cvdlint", "#000000", "#FFFFFF"])
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    assert exit_info.value.code == 2
+    assert message in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("output_format", ["json", "sarif"])
 def test_machine_readable_output(
     output_format: str,
