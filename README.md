@@ -33,7 +33,7 @@
   <img
     src="https://raw.githubusercontent.com/a-lfns/cvdlint/main/docs/assets/cvdlint-demo.gif"
     alt="cvdlint static linter, direct CLI check, and Python API demonstration"
-    width="670"
+    width="620"
   >
 </p>
 

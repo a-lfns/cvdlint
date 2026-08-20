@@ -34,7 +34,6 @@ def test_cli_scans_python_path(
 
     output = capsys.readouterr().out
     assert exit_info.value.code == 1
-    assert "Machado, Oliveira & Fernandes (2009); severity 1.00" in output
     assert "model-specific approximations" in output
     assert f"{path}:1:11:" in output
     assert "palette: #E41A1C  #4DAF4A" in output

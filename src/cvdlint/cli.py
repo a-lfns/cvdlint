@@ -106,9 +106,6 @@ def _format_color(color: str) -> str:
     return f"\033[48;2;{red};{green};{blue}m  \033[0m {color}"
 
 
-def _print_simulation_context(severity: float) -> None:
-    print(f"Simulation: Machado, Oliveira & Fernandes (2009); severity {severity:.2f}.")
-
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cvdlint",
@@ -314,7 +311,6 @@ def main() -> None:
             if any(not diagnostic.report.passed for diagnostic in diagnostics):
                 raise SystemExit(1)
             return
-        _print_simulation_context(severity)
         problem_count = 0
         for diagnostic in diagnostics:
             occurrence = diagnostic.occurrence
@@ -362,7 +358,6 @@ def main() -> None:
             raise SystemExit(1)
         return
 
-    _print_simulation_context(severity)
     print("palette: " + "  ".join(_format_color(color) for color in report.colors))
     for summary in report.summaries:
         print(
