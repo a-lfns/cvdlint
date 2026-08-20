@@ -32,7 +32,7 @@
 <p align="center">
   <img
     src="https://raw.githubusercontent.com/a-lfns/cvdlint/main/docs/assets/cvdlint-demo.gif"
-    alt="cvdlint static linter, direct CLI check, and Python API demonstration"
+    alt="cvdlint static linter, direct CLI, Python API, and Matplotlib adapter demonstration"
     width="620"
   >
 </p>

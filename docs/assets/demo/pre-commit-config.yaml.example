@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: cvdlint
+        name: cvdlint
+        entry: sh -c '"$CVDLINT_DEMO_BIN" "$@"' --
+        language: system
+        files: \.(py|ipynb|json|toml|ya?ml)$
