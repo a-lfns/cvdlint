@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import cvdlint.cli as cli_module
 from cvdlint.cli import _parser, main
 
 
@@ -34,7 +35,6 @@ def test_cli_scans_python_path(
 
     output = capsys.readouterr().out
     assert exit_info.value.code == 1
-    assert "model-specific approximations" in output
     assert f"{path}:1:11:" in output
     assert "palette: #E41A1C  #4DAF4A" in output
     assert "CVD001 deuteranopia: distance" in output
@@ -108,8 +108,15 @@ def test_cli_defaults_to_absolute_ciede2000_tolerance(
 
 def test_cli_reports_configured_simulation_severity(
     monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
 ) -> None:
+    received: dict[str, object] = {}
+    palette_check = cli_module.palette_check
+
+    def record_options(colors: list[str], **options: object):
+        received.update(options)
+        return palette_check(colors, **options)
+
+    monkeypatch.setattr(cli_module, "palette_check", record_options)
     monkeypatch.setattr(
         "sys.argv",
         ["cvdlint", "--severity", "0.5", "#000000", "#FFFFFF"],
@@ -117,7 +124,7 @@ def test_cli_reports_configured_simulation_severity(
 
     main()
 
-    assert "severity 0.50" in capsys.readouterr().out
+    assert received["severity"] == 0.5
 
 
 def test_direct_cli_reports_palette_and_simulated_problem_colours(

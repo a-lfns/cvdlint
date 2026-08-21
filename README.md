@@ -20,8 +20,8 @@
   <a href="https://pypi.org/project/cvdlint/">
     <img src="https://img.shields.io/pypi/v/cvdlint?style=for-the-badge" alt="PyPI release" height="20">
   </a>
-  <a href="https://github.com/a-lfns/cvdlint/actions/workflows/main.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/a-lfns/cvdlint/main.yml?branch=main&amp;style=for-the-badge&amp;label=CI" alt="CI status" height="20">
+  <a href="https://github.com/a-lfns/cvdlint/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/a-lfns/cvdlint/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI" alt="CI status" height="20">
   </a>
 </p>
 
