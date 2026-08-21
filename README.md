@@ -102,7 +102,7 @@ The palette-analysis API and original relative-tolerance policy were informed
 by Jakub Nowosad's R package
 [colorblindcheck](https://github.com/Nowosad/colorblindcheck), whose published
 results are used as compatibility references. `cvdlint` is an independent
-Python implementation with its own static-linting and reporting features.
+Python implementation with its own static-linting, runtime API, and reporting features.
 
 ## Licence
 
