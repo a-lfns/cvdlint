@@ -26,6 +26,15 @@ Options
 ``--format FORMAT``
    Select ``text``, ``json``, or ``sarif`` output.
 
+.. _terminal-output:
+
+Output in terminals
+-------------------
+
+When the terminal environment supports colour, text reports display ANSI
+true-colour swatches beside original and simulated hexadecimal values. Set
+``NO_COLOR=1`` to disable swatches explicitly.
+
 Project configuration
 ---------------------
 
@@ -113,3 +122,27 @@ The repository publishes a pre-commit hook:
        rev: v0.1.0
        hooks:
          - id: cvdlint
+
+Install the hook once, then run it automatically on commits or explicitly
+against every tracked file:
+
+.. code-block:: console
+
+   pre-commit install
+   pre-commit run --all-files
+
+A failing hook reports the source location, extracted palette, problematic
+pair, and modelled colours:
+
+.. code-block:: text
+
+   cvdlint..................................................................Failed
+   - hook id: cvdlint
+   - exit code: 1
+
+   palette.json:1:1:
+     palette: #E41A1C  #4DAF4A  #377EB8
+     CVD001 deuteranopia: distance 9.60 < 10.00
+       original:  #E41A1C  #4DAF4A
+       simulated: #938208  #A69852
+   Checked 1 palette(s) in 1 file(s); found 1 problem(s).

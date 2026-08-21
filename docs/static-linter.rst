@@ -35,8 +35,8 @@ problematic original and simulated colour pair.
        original:     #E41A1C     #4DAF4A
        simulated:    #938208     #A69852
 
-Interactive terminals show colour swatches alongside the hexadecimal values.
-Use ``NO_COLOR=1 cvdlint .`` to disable them.
+Interactive terminals show colour swatches alongside the hexadecimal values;
+see :ref:`terminal-output` for details.
 
 Static-analysis boundary
 ------------------------

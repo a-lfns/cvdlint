@@ -35,6 +35,10 @@ plotly = ["plotly>=5"]
 root = []
 docs = [
     "furo>=2024.8.6",
+    "matplotlib>=3.8",
+    "myst-nb>=1.1",
+    "plotly>=5",
+    "seaborn>=0.13",
     "sphinx>=8.1",
     "sphinx-copybutton>=0.5.2",
 ]

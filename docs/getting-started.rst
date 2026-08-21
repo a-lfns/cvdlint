@@ -34,6 +34,21 @@ Check a known palette directly:
 
    cvdlint '#E41A1C' '#4DAF4A' '#377EB8'
 
+The text report summarises every simulated condition and identifies the
+problematic pair:
+
+.. code-block:: text
+
+   palette: #E41A1C  #4DAF4A  #377EB8
+   normal           3/3   distinguishable; minimum distance 48.98
+   deuteranopia     2/3   distinguishable; minimum distance 9.60
+   protanopia       3/3   distinguishable; minimum distance 28.54
+   tritanopia       3/3   distinguishable; minimum distance 13.39
+   FAIL: potentially indistinguishable colour pairs
+     CVD001 deuteranopia: distance 9.60 < 10.00
+       original:  #E41A1C  #4DAF4A
+       simulated: #938208  #A69852
+
 Check a palette produced at runtime:
 
 .. code-block:: python

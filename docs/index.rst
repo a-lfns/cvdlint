@@ -26,6 +26,12 @@ your colours exist.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorials
+
+   tutorials/runtime-checks
+
+.. toctree::
+   :maxdepth: 2
    :caption: Reference
 
    api

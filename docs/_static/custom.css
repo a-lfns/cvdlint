@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap");
 
+:root {
+    --mystnb-source-margin-color: var(--light, #5d3a9b) var(--dark, #9b79d0);
+}
+
 body {
     --font-stack: "SN Pro", sans-serif;
     --font-stack--headings: Tahoma, "SN Pro", sans-serif;

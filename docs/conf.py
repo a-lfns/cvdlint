@@ -11,9 +11,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
+    "myst_nb",
 ]
 
 autodoc_typehints = "description"
+nb_execution_mode = "auto"
+nb_execution_timeout = 60
 html_theme = "furo"
 html_title = f"cvdlint {release}"
 html_logo = "assets/cvdlint-lockup-dark.svg"
