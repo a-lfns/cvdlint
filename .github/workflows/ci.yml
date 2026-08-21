@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - &checkout_repository
+        name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - &install_python
+        name: Install uv and Python
+        uses: astral-sh/setup-uv@v9
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - &install_dev
+        name: Install development dependencies
+        run: uv sync --locked --group dev
+      - name: Run Ruff
+        run: |
+          uv run --frozen ruff check .
+          uv run --frozen ruff format --check .
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - *checkout_repository
+      - *install_python
+      - *install_dev
+      - name: Run tests
+        env:
+          MPLBACKEND: Agg
+        run: uv run --frozen pytest
+
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - *checkout_repository
+      - *install_python
+      - name: Install documentation dependencies
+        run: uv sync --locked --no-dev --extra docs
+      - name: Build documentation
+        env:
+          MPLBACKEND: Agg
+        run: uv run --frozen sphinx-build -W --keep-going -b html docs docs/_build/html
+
+  build:
+    name: Build distributions
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - *checkout_repository
+      - *install_python
+      - name: Build wheel and source distribution
+        run: uv build --no-sources
+      - name: Smoke-test wheel
+        run: uv run --isolated --no-project --with ./dist/*.whl tests/smoke_test.py
+      - name: Smoke-test source distribution
+        run: uv run --isolated --no-project --with ./dist/*.tar.gz tests/smoke_test.py
+      - name: Upload distributions
+        uses: actions/upload-artifact@v7
+        with:
+          name: distributions
+          path: dist/
