@@ -6,10 +6,14 @@ import ast
 import fnmatch
 import json
 import re
-import tomllib
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 compatibility
+    import tomli as tomllib
 
 from .core import Metric, palette_check
 from .models import CheckResult
