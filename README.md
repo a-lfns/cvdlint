@@ -23,6 +23,9 @@
   <a href="https://github.com/a-lfns/cvdlint/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/a-lfns/cvdlint/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI" alt="CI status" height="20">
   </a>
+  <a href="https://cvdlint.readthedocs.io/en/latest/?badge=latest">
+    <img src="https://readthedocs.org/projects/cvdlint/badge/?version=latest&amp;style=for-the-badge&amp;label=Docs" alt="Docs status" height="20">
+  </a>
 </p>
 
 
