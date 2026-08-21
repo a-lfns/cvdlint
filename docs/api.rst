@@ -10,6 +10,8 @@ Core API
 
 .. autofunction:: cvdlint.simulate_palette
 
+.. autofunction:: cvdlint.check_figure
+
 Result models
 -------------
 

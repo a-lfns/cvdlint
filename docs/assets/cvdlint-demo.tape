@@ -60,7 +60,7 @@ Type "clear; print -P '%B%F{#F2A65A}SCAN REPOSITORY FOR CONFUSABLE COLOUR PALETT
 Enter
 Show
 Sleep 2s
-Type "pre-commit run --all-files"
+Type "pre-commit run cvdlint --all-files"
 Enter
 Sleep 10s
 Hide
@@ -93,7 +93,7 @@ Type "import matplotlib.pyplot as plt"
 Enter
 Show
 Wait+Line />>>/
-Type "from cvdlint.adapters.matplotlib import check_figure"
+Type "from cvdlint import check_figure"
 Enter
 Wait+Line />>>/
 Type "fig = plt.figure()"

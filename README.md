@@ -37,62 +37,64 @@
   >
 </p>
 
-## Usage
+## Quick start
 
-### Pre-commit hook
+### Pre-commit
 
-Add the
-[hook configuration](https://cvdlint.readthedocs.io/en/latest/cli-configuration.html#pre-commit) to your repository,
-then run:
+After [installing the cvdlint pre-commit hook](https://cvdlint.readthedocs.io/en/latest/cli-configuration.html#pre-commit-hook),
 
 ```console
-pre-commit install
-pre-commit run --all-files
+pre-commit run cvdlint --all-files
 ```
+will scan every supported tracked file for potentially confusable palettes.
 
-### Local use
+### Local usage
 
-Install `cvdlint`:
+After [installing `cvdlint`](https://cvdlint.readthedocs.io/en/latest/getting-started.html#installation),
+you can:
 
-```console
-pip install cvdlint
-```
-
-Check a known palette:
+**Check a known palette:**
 
 ```console
 cvdlint '#E41A1C' '#4DAF4A' '#377EB8'
 ```
 
-Scan the current project or selected paths:
+**Scan selected paths for potentially confusable palettes:**
 
 ```console
 cvdlint [dir1] [dir2] [filepath1] [filepath2] ...
 ```
 
-Use `cvdlint` in your Python code:
+**Check explicit palettes or completed figures at runtime:**
 
 ```python
-from cvdlint import palette_check
+import matplotlib.pyplot as plt
+
+from cvdlint import check_figure, palette_check
 
 report = palette_check(["#E41A1C", "#4DAF4A", "#377EB8"])
 report.raise_for_failure()
+
+fig = plt.figure()
+plt.bar(["A", "B", "C"], [3, 2, 4], color=plt.colormaps["Set1"].colors[:3])
+check_figure(fig).raise_for_failure()
 ```
 
-See the [plotting adapter guide](https://cvdlint.readthedocs.io/en/latest/python-api-adapters.html)
-for runtime validation with Matplotlib and Plotly.
 
 ## Documentation
 
 See the [full documentation](https://cvdlint.readthedocs.io/en/latest/) for
 supported static patterns, configuration, CLI options, CI and pre-commit
-integration, plotting adapters, methodology, limitations, and the API
+integration, supported plotting libraries, methodology, limitations, and the API
 reference.
 
 ## Contributing
 
-Contributions are welcome; see [CONTRIBUTING.md](https://github.com/a-lfns/cvdlint/blob/main/CONTRIBUTING.md) to get
-started.
+Contributions, bug reports, and real-world testing are welcome. If you use
+`cvdlint` in your projects, feedback on missed palettes, false positives, and
+plotting-library compatibility is especially valuable. See
+[CONTRIBUTING.md](https://github.com/a-lfns/cvdlint/blob/main/CONTRIBUTING.md)
+to get started.
 
 ## Acknowledgements
 

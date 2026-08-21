@@ -110,8 +110,10 @@ scanning service:
    cvdlint --format json . > cvdlint.json
    cvdlint --format sarif . > cvdlint.sarif
 
-Pre-commit
-----------
+.. _pre-commit-hook:
+
+Install and use the pre-commit hook
+-----------------------------------
 
 The repository publishes a pre-commit hook:
 
@@ -129,7 +131,7 @@ against every tracked file:
 .. code-block:: console
 
    pre-commit install
-   pre-commit run --all-files
+   pre-commit run cvdlint --all-files
 
 A failing hook reports the source location, extracted palette, problematic
 pair, and modelled colours:
