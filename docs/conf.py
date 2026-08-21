@@ -18,13 +18,15 @@ autodoc_typehints = "description"
 nb_execution_mode = "auto"
 nb_execution_timeout = 60
 html_theme = "furo"
-html_title = f"cvdlint {release}"
+html_title = f"cvdlint v{release}"
 html_logo = "assets/cvdlint-lockup-dark.svg"
 html_favicon = "assets/cvdlint-logo.svg"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_js_files = ["version.js"]
 html_theme_options = {
     "navigation_with_keys": True,
+    "sidebar_hide_name": True,
     "light_css_variables": {
         "color-brand-primary": "#5D3A9B",
         "color-brand-content": "#5D3A9B",

@@ -39,6 +39,16 @@ h6 {
     letter-spacing: -1px;
 }
 
+.sidebar-brand-version {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--color-sidebar-caption-text);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-align: center;
+}
+
 .sidebar-drawer {
     --color-background-hover: #5a5a5a;
     --color-background-hover--transparent: #363636;
